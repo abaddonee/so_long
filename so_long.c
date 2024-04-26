@@ -93,10 +93,11 @@ void ft_reading(int fd)
     free(gnl);
     close(fd);
 }
-void ft_rectangular(int fd, struct s_len *length)
+void ft_rectangular(int fd)
 {
+    struct s_len length;
     char *gnl;
-    length->line_len = 0;   
+    length.line_len = 0;   
     ft_opening();
     gnl=malloc(1024 * sizeof(char *));
     if (gnl == NULL)
@@ -107,10 +108,10 @@ void ft_rectangular(int fd, struct s_len *length)
         perror("map vide");
         exit(EXIT_FAILURE);
     }
-    length->line_len = ft_strlen(gnl);
-    length->line_len -= 1;   
-    printf("\n nombres de caractere par ligne %d", length->line_len);
-    if (length->line_len == length->line_nb)
+    length.line_len = ft_strlen(gnl);
+    length.line_len -= 1;   
+    printf("\n nombres de caractere par ligne %d", length.line_len);
+    if (length.line_len == length.line_nb)
     {
         perror("map non comforme");
         exit(EXIT_FAILURE);
@@ -118,12 +119,13 @@ void ft_rectangular(int fd, struct s_len *length)
     printf("\n map rectangulaire");
     free(gnl);
 }
-void ft_same_len(int fd, struct s_len *length)
+void ft_same_len(int fd)
 {
+    struct s_len length;
     char *gnl;
     //int actual_line_len;
 
-    length->actual_line_len = 0;
+    length.actual_line_len = 0;
     gnl=malloc(1024 * sizeof(char *));
     if(gnl == NULL)
     {
@@ -134,10 +136,10 @@ void ft_same_len(int fd, struct s_len *length)
         gnl = get_next_line(fd);
         if(gnl == NULL)
             break;
-        length->actual_line_len = ft_strlen(gnl) - 1;
+        length.actual_line_len = ft_strlen(gnl) - 1;
         printf("gnl %s\n", gnl);
-        printf("1rst line len = %d\n actual line len = %d\n", length->line_len , length->actual_line_len);
-        if(length->line_len != length->actual_line_len)
+        printf("1rst line len = %d\n actual line len = %d\n", length.line_len , length.actual_line_len);
+        if(length.line_len != length.actual_line_len)
         {
             //printf("1rst line len = %d\n actual line len = %d\n", length.line_len , actual_line_len);
             perror("\nligne incomplete");
@@ -196,13 +198,12 @@ void ft_wall_updown(int fd)
 
 void ft_verify_map()
 {
-    struct s_len length;
     int fd;
 
     fd = ft_opening();
     ft_reading(fd);
-    ft_rectangular(fd, &length);
-    ft_same_len(fd, &length);
+    ft_rectangular(fd);
+    ft_same_len(fd);
     //ft_wall_updown(fd);
     close(fd);
 }
