@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/veravucmanovitch/Desktop/code/42/project/so_long",
+      "program": "/Users/veravucmanovitch/Desktop/code/42/project/so_long/build/Debug/outDebug"
+    }
+  ]
+}
