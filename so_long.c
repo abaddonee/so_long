@@ -12,54 +12,6 @@
 
 #include "so_long.h"
 
-/*struct s_data
-{
-    void    *img;
-    char    *addresse;
-    int     bit_par_pixel;
-    int     line_length;
-    int     endian;    
-};
-
-struct	s_var
-{
-	void	*mlx;
-	void	*mlx_win;
-};
-
-struct s_patrack
-{
-    char **le_array;
-};
-
-struct s_len
-{
-    struct s_patrack tabs;
-    int line_len;
-    int actual_line_len;
-    int line_nb;
-};
-
-struct s_excolpos
-{
-    int colectbles;
-    int exite;
-    int starting_block; 
-    int i;
-    char *gnl;
-    int get_collectibles;
-};
-
-
-
-struct s_move
-{
-    struct s_excolpos statitik;
-    int dir_coolomns[4];
-    int dir_lines[4];
-};*/
-
-
 
 void	*ft_memset(void *b, int c, size_t len)
 {
@@ -126,7 +78,7 @@ struct s_len ft_reading(int fd)
     while (1)
     {
         gnl = get_next_line(fd);
-        printf("%s", gnl);
+      //  printf("%s", gnl);
         if (gnl == NULL)
             break;
         length.line_nb++;
@@ -163,10 +115,10 @@ struct s_len ft_rectangular(int fd)
     return(length);
 }
 // compte le nombre d'un cahr donnee
-int 	ft_nb_of_c(const char *s, int c)
+size_t ft_nb_of_c(const char *s, int c)
 {
 	int	i;
-    int nb_of_one;
+    size_t nb_of_one;
 
     nb_of_one = 0;
 	i = 0;
@@ -211,7 +163,7 @@ void  ft_same_len(int fd, struct s_len length)
 
 
 
-void ft_wall_up(int fd, struct s_len lines)
+void ft_wall_up(int fd)
 {
     char *up_line;
 
@@ -235,7 +187,7 @@ void ft_wall_up(int fd, struct s_len lines)
 void ft_wall_down(int fd, struct s_len lines)
 {
     char *down_line;
-    int yesyoucan;
+    size_t yesyoucan;
     int x;
     
     x = 1;
@@ -291,16 +243,55 @@ void ft_closed_wall(int fd, struct s_len length)
         }        
     }
     close(fd);
-    
+}
 
+void cleenbuffer(int fd)
+{
+    char *gnl;
+    ft_opening();
+    gnl = malloc(1024 * sizeof(char *));
+    if(gnl == NULL)
+        exit(EXIT_FAILURE);
+    while (gnl != NULL)
+    {
+        gnl = get_next_line(fd);
+        free(gnl);
+    }
+    close(fd);
+}
+
+void extra_char(int fd)
+{
+    ft_opening();
+    char *gnl = NULL;  // Initialiser à NULL
+    int i;
+
+    while (1)  // Lire chaque ligne
+    {
+        gnl = get_next_line(fd);
+        if (gnl == NULL)
+            break;
+        i = 0;  // Réinitialiser `i` à chaque nouvelle ligne
+        while (gnl[i] != '\0' && gnl[i] != '\n')  // Lire chaque caractère de la ligne
+        {
+            if (gnl[i] != '1' && gnl[i] != '0' && gnl[i] != 'C' && gnl[i] != 'E' && gnl[i] != 'P')
+            {
+                perror("caractère non autorisé");
+                free(gnl);  // Libérer la mémoire avant de quitter
+                exit(EXIT_FAILURE);
+            }
+            i++;
+        }
+        free(gnl);  // Libérer la mémoire après chaque ligne
+    }
+    close(fd);  // Fermer le fichier
 }
 
 // verifier le nombre de collectible(au moin 1) , de sortie (1) et de depars (1)
 
-void ft_ex_col_pos(int fd ,struct s_len length)
+struct s_excolpos ft_ex_col_pos(int fd ,struct s_len length, struct s_excolpos vars)
 {
     ft_opening();
-    struct s_excolpos vars;
     vars.i = 0;
     vars.colectbles = 0;
     vars.exite = 0;
@@ -314,197 +305,133 @@ void ft_ex_col_pos(int fd ,struct s_len length)
         vars.exite += ft_nb_of_c(vars.gnl, 'E');
         vars.starting_block += ft_nb_of_c(vars.gnl, 'P');
     }  
-    if (vars.exite != 1 || vars.starting_block != 1)
+    if (vars.exite != 1 || vars.starting_block != 1 || vars.colectbles == 0)
     {
             perror("trop / pas assez de sortie ou de pos de depart");
             exit(EXIT_FAILURE);
     }
-    if (vars.colectbles == 0)
-    {
-            perror("pas de collectible :(");
-            exit(EXIT_FAILURE);
-    }
+    close(fd);
+    return vars;
 }
 
-//---Backtracking pour verifier que le joueur peut recuperer les collectible et sortir-----
 
-struct s_len ft_double_array(int fd, struct s_len lines)
+
+
+// trouver la position de p pour le floodfilldelamort 
+
+struct s_point pos_de_p(int fd, struct s_len length)
 {
+    ft_opening();
+    struct s_point points;
+
+    points.x = 0;  
+    points.y = 0;
+    while (points.y < length.line_nb) 
+    {
+        points.gnl = get_next_line(fd);
+        if (points.gnl == NULL) 
+            break;     
+        points.x= 0;
+        while (points.gnl[points.x] != '\0' && points.gnl[points.x] != '\n') 
+        {
+            if (points.gnl[points.x] == 'P')  
+            {
+                return points;
+            }
+            points.x++;
+        }
+        free(points.gnl);
+        points.y++;  
+    }
+    close(fd);
+    return points; 
+}
+// mettre la taille du tableau dans s_size_bis
+
+struct s_size_bis ft_size_bis(struct s_len length, struct s_size_bis size)
+{
+    size.x = length.line_len;
+    size.y = length.line_nb;
+    return size;
+}
+
+// cree un double tableau pour le floodfilldelamort
+struct s_tab ft_double_array(int fd, struct s_tab tabs, struct s_len lines) 
+{
+    ft_opening();
     int i;
+    char *gnl;
 
     i = 0;
-    //printf("\n %d", lines.line_nb);
-    lines.tabs.le_array = malloc(1024 * sizeof (char *));
-    if(lines.tabs.le_array == NULL)
+    tabs.tab_bis = malloc(1024 * sizeof (char *));
+    if(tabs.tab_bis == NULL)
     {
-        perror("memory probleme");
         exit(EXIT_FAILURE);
     }
-     while (1)
+    while (gnl != NULL && i < lines.line_nb)
     {
-        lines.tabs.le_array[i]= get_next_line(fd);
-
-        if(i == lines.line_nb - 1)
-            break;
+        gnl = get_next_line(fd);
+        printf("\n %s", gnl);
+        tabs.tab_bis[i] = gnl;
         i++;
     }
     close(fd);
-    printf("le array %c", lines.tabs.le_array[3][1]);
-    //printf("%d \n ", lines.line_len);
-    return(lines);
-
+    return(tabs);
 }
 
-// je dois trouver le p (valeur a garder) memeset d'un tableau similaire a le array
 
 
+//flood fill
 
-void ft_move_throuth_cllomns(int dir_coolomns[4])
+ void fill(struct s_tab tabs, struct s_size_bis size, struct s_point *point, int row, int col)
 {
-    dir_coolomns[0] = 0;
-    dir_coolomns[1] = 0;
-    dir_coolomns[2] = -1;
-    dir_coolomns[3] = 1;
-}
-
-void ft_move_throuth_lines(int dir_lines[4])
-{
-    dir_lines[0] = -1; 
-    dir_lines[1] = 1;
-    dir_lines[2] = 0;
-    dir_lines[3] = 0;
-}
-
-int ft_searching_col_and_exit(struct s_move move, struct s_len lines, int nouv_colonne, int nouv_lines, int nouveau_table[lines.line_nb][lines.line_len])
-{
-    printf("%s", lines.tabs.le_array[3]);
-    if(ft_can_or_not(move, lines, nouv_colonne, nouv_lines, nouveau_table))
+    if (row < 0 || col < 0 || row >= size.y || col >= size.x)
+        return ;
+    if (tabs.tab_bis[row][col] == 'F')
+        return ;
+    if (tabs.tab_bis[row][col] == '1')
+        return ;
+    if (tabs.tab_bis[row][col] == 'C') 
     {
-        if (lines.tabs.le_array[nouv_lines][nouv_colonne] == 'C')
-        {
-            move.statitik.get_collectibles++;
-            lines.tabs.le_array[nouv_lines][nouv_colonne] = '0';
-        }
-        if (lines.tabs.le_array[nouv_lines][nouv_colonne] == 'E' || lines.tabs.le_array[nouv_lines][nouv_colonne] == '0')
-        {
-           if (ft_can_play(move, lines, nouv_colonne, nouv_lines, nouveau_table))
-           {
-             return(1);
-           }
-        }
+        point -> nbr_collect_fill++;
+        tabs.tab_bis[row][col] = 'F';
     }
-    return(0);
-}
-
-
-int ft_can_play(struct s_move moving, struct s_len lines, int colonne, int lignes, int nouveau_table[lines.line_nb][lines.line_len])
-{
-
-    ft_move_throuth_cllomns(moving.dir_coolomns);
-    ft_move_throuth_lines(moving.dir_lines);
-    int i;
-    int nouv_colonne;
-    int nouv_lines;
-    int result;
-
-    i = 0;
-    nouveau_table[lignes][colonne] = 1;
-    if (lines.tabs.le_array[lignes][colonne] == 'E')
+    if (tabs.tab_bis[row][col] == 'E')
     {
-        return(1);
+        point -> nbr_exit_fill++;
+        tabs.tab_bis[row][col] = 'F';
     }
-    while(i < 4)
-    {
-        nouv_colonne = colonne + moving.dir_coolomns[i];
-        nouv_lines = lignes + moving.dir_lines[i];
-        result = ft_searching_col_and_exit(moving, lines, nouv_colonne, nouv_lines, nouveau_table);
-        if(result)
-        {
-            return(1);
-        }
-        i++;
+    if (tabs.tab_bis[row][col] == '0') {
+        tabs.tab_bis[row][col] = 'F';
     }
-    return(0);
+    fill(tabs, size, point, row - 1, col);  
+    fill(tabs, size, point, row + 1, col); 
+    fill(tabs, size, point, row, col - 1);  
+    fill(tabs, size, point, row, col + 1);  
 }
 
-
-void ft_error_handle(struct s_len lines, struct s_move move, int colonne, int lignes, int nouveau_table[lines.line_nb][lines.line_len])
+struct s_point flood_fill(struct s_tab tabs, struct s_size_bis size, struct s_point starter)
 {
-    move.statitik.get_collectibles = 0;
-    if(ft_can_play(move, lines, colonne, lignes, nouveau_table))
+    starter.nbr_collect_fill = 0;
+    starter.nbr_exit_fill = 0;
+    starter.xbis = starter.x;
+    starter.ybis = starter.y;
+    fill(tabs, size, &starter, starter.y, starter.x); 
+    return starter;
+}
+
+// Vérification si le nombre de collectables et de sorties est correct
+void verify_fill(struct s_point point, struct s_excolpos vars)
+{
+    printf ("nbr collectible de base : %d\n", vars.colectbles);
+    printf("nbr_collect_fill: %d\n", point.nbr_collect_fill);
+    printf("nbr_exit_fill: %d\n", point.nbr_exit_fill);
+    if (point.nbr_collect_fill != vars.colectbles || point.nbr_exit_fill != 1)
     {
-        perror("exit et collectible are reachable");
+        perror("map non jouable");
+        exit(EXIT_FAILURE);
     }
-    else
-    {
-        perror("exit and collectible are not reachable");   
-    } 
 }
-void ft_find_le_p(struct s_len lines, struct s_move move)
-{
-    int ligne;
-    int colonne;
-    int i;
-    int j;
-    int nouveau_table[lines.line_nb][lines.line_len];
-
-    i = 0;
-    while(i < lines.line_nb)
-    {
-        j = 0;
-        while(j < lines.line_len)
-        {
-            if(lines.tabs.le_array[i][j] == 'P') 
-            {
-                ligne = i;
-                colonne = j;
-                break;
-            }
-            j++;
-        }
-        i++;
-    }
-    ft_memset(nouveau_table, 0, sizeof(nouveau_table));
-    ft_error_handle(lines, move, colonne, ligne, nouveau_table);
-
-} 
-
-int ft_can_or_not(struct s_move move, struct s_len lines, int nouv_colonne, int nouv_lines,int nouveau_table[lines.line_nb][lines.line_len])
-{
-    int is_libre;
-    int not_visited;
-
-    is_libre = lines.tabs.le_array[nouv_lines][nouv_colonne] != '1';
-    not_visited = !nouveau_table[nouv_lines][nouv_colonne];
-
-    return(is_libre && not_visited);
-}
-
-
-
-
-
-
-
-
-
-
-void ft_verify_playability(struct s_len lines, struct s_move move)
-{
-    int fd;
-    fd = ft_opening();
-    ft_double_array(fd, lines);
-    //ft_find_le_p(lines, move);
-    //ft_can_play(move, lines);
-
-
-
-
-}
-
-
-// faire en sorte que apres le backtracking les colectible et exit soit toujours present.
-
 
 
 // fonction principale qui execute toute les autre fonction
@@ -512,41 +439,195 @@ void ft_verify_playability(struct s_len lines, struct s_move move)
 void ft_verify_map()
 {
     struct s_len lines;
-    struct s_patrack arraying;
-    struct s_move move;
+    struct s_excolpos vars;
+    struct s_tab tabs;
+    struct s_point points;
+    struct s_size_bis size;
     int fd;
 
     fd = ft_opening();
     lines = ft_reading(fd);
     lines = ft_rectangular(fd);
     ft_same_len(fd, lines);
-    ft_wall_up(fd, lines);
+    ft_wall_up(fd);
     ft_wall_down(fd, lines);
     ft_closed_wall(fd, lines);
-    ft_ex_col_pos(fd, lines);
-   // ft_verify_playability(lines, move);
+    cleenbuffer(fd);
+    extra_char(fd);
+    vars = ft_ex_col_pos(fd, lines, vars);
+    points = pos_de_p(fd, lines);
+    size = ft_size_bis(lines, size);
+    cleenbuffer(fd);
+    tabs = ft_double_array(fd, tabs, lines);
+    points = flood_fill(tabs, size, points);
+    //printf("size x = %d, size y = %d\n", size.x, size.y);
+    verify_fill(points, vars);  
     close(fd);
+}
+
+//-------------------------------------------------------------------------------------------------------------------------   
+// mouvement du personnage 
+
+
+struct s_point ft_doubless_array(int fd, struct s_point tabs, struct s_len lines) 
+{
+    ft_opening();
+    int i = 0;
+    char *gnl;
+
+    tabs.tab_bis_bis = malloc(1024 * sizeof(char *)); // Allocation en fonction du nombre de lignes
+    if (tabs.tab_bis_bis == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+    while (gnl != NULL && i < lines.line_nb)
+    {
+        gnl = get_next_line(fd);
+        printf("\n %s", gnl);
+        tabs.tab_bis_bis[i] = gnl;
+        i++;
+    }
+    close(fd);
+    return tabs;
+}
+// Fonction de gestion des événements clavier
+int key_handler(int keycode, struct s_point player_position, struct s_size_bis size, char **map)
+{
+    int new_x = player_position.xbis;
+    int new_y = player_position.ybis;
+
+    if (keycode == 126)        // Touche 'haut'
+        new_y--;
+    else if (keycode == 125)   // Touche 'bas'
+        new_y++;
+    else if (keycode == 123)   // Touche 'gauche'
+        new_x--;
+    else if (keycode == 124)   // Touche 'droite'
+        new_x++; 
+
+    // Vérifier les limites et les obstacles ('1')
+    if (new_x < 0 || new_y < 0 || new_x >= size.x || new_y >= size.y || map[new_y][new_x] == '1')
+        return -1;
+
+    // Mettre à jour la position du joueur
+    player_position.xbis = new_x;
+    player_position.ybis = new_y;
+
+    printf("x = %d, y = %d\n", player_position.xbis, player_position.ybis);
+    return 0;
+}
+
+// Fonction de déplacement du joueur
+int ft_move(void *param) {
+    struct s_move_data *data = (struct s_move_data *)param;
+
+    // Access the members of data
+    mlx_hook(data->vars->mlx_win, 2, 0, key_handler, data->player_position);
+
+    return 0;  // Since mlx_loop_hook expects an int return value
+}
+
+void ft_game()
+{
+    struct s_var vars;
+    struct s_point player_position;
+    struct s_data img;
+    struct s_len lines;
+    struct s_size_bis size;
+    int fd;
+
+    // Ouvrir le fichier et lire les dimensions de la carte
+    fd = ft_opening();
+    lines = ft_reading(fd);
+    lines = ft_rectangular(fd);
+      // Lire la carte et obtenir les dimensions
+      // Définir le nombre de lignes (à partir de `ft_reading`)
+
+    // Charger la carte dans un tableau 2D
+    cleenbuffer(fd);
+    player_position = ft_doubless_array(fd, player_position, lines);
+
+    // Définir la taille de la carte
+    size.x = lines.line_len;
+    size.y = lines.line_nb;
+    printf("Taille de la carte : %d x %d\n", size.x, size.y);
+
+    // Créer la fenêtre et initialiser la bibliothèque graphique
+    
+}
+
+void ft_windowss(struct s_var vars, struct s_data img)
+{   
+    vars.mlx = mlx_init();
+    vars.mlx_win = mlx_new_window(vars.mlx, 1280, 720, "so_long");
+   // img.img = mlx_new_image(vars.mlx, 1280, 720);
+    //img.addresse = mlx_get_data_addr(img.img, &img.bit_par_pixel, &img.line_length, &img.endian);
+    
+    mlx_loop(vars.mlx);
+}
+
+void ft_gameloop() {
+    struct s_var vars;
+    struct s_data img;
+    struct s_point player_position;
+    struct s_size_bis size;
+    char **map;
+    map = player_position.tab_bis_bis;
+
+    // Create and initialize the move data structure
+    struct s_move_data move_data = {&vars, &player_position, size, map};
+
+    ft_windowss(vars, img);
+   
+    // Hook the move function to the loop
+    mlx_loop_hook(vars.mlx_win, ft_move, &move_data);
+    
+    // Other hooks
+    mlx_loop_hook(vars.mlx_win, ft_close, &vars);
+    mlx_loop_hook(vars.mlx_win, cross_close, &vars);
+    
+    // Start the graphics loop
+    
+    mlx_loop(vars.mlx);
 }
 
 
 
 int main()
 {
-	struct s_var vars;
-    struct s_data img; 
-
-	vars.mlx = mlx_init();
-	vars.mlx_win = mlx_new_window(vars.mlx, 1280, 720, "so_long");
-    img.img = mlx_new_image(vars.mlx, 1280, 720);
-
-    img.addresse = mlx_get_data_addr(img.img, &img.bit_par_pixel, &img.line_length, &img.endian);
-
-
     ft_verify_map();
-    mlx_hook(vars.mlx_win, 2, 0, ft_close, &vars);
-    mlx_hook(vars.mlx_win, 17, 0, cross_close, &vars);
-
-	mlx_loop(vars.mlx);
-
-
+   
+    ft_game();
+    ft_gameloop();
+   
+    return 0;
 }
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

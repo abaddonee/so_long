@@ -40,14 +40,13 @@ struct	s_var
 	void	*mlx_win;
 };
 
-struct s_patrack
+struct s_tab 
 {
-    char **le_array;
+    char **tab_bis;
 };
 
 struct s_len
 {
-    struct s_patrack tabs;
     int line_len;
     int actual_line_len;
     int line_nb;
@@ -63,14 +62,39 @@ struct s_excolpos
     int get_collectibles;
 };
 
+  struct  s_point
+  {
+    int           x;
+    int           y;
+    int nbr_collect_fill;
+    int nbr_exit_fill;
+    int i;
+    char *gnl;
+    int xbis;
+    int ybis;
+    char **tab_bis_bis;
+  };
 
-
-struct s_move
+ 
+   struct  s_size_bis
+  {
+    int           x;
+    int           y;
+  };
+struct s_position 
 {
-    struct s_excolpos statitik;
-    int dir_coolomns[4];
-    int dir_lines[4];
+    int x;
+    int y;
 };
+
+struct s_move_data {
+    struct s_var *vars;
+    struct s_point *player_position;
+    struct s_size_bis size;
+    char **map;
+};
+
+
 
 void	*ft_memset(void *b, int c, size_t len);
 int	ft_close(int keycode, struct s_var *vars);
@@ -78,22 +102,14 @@ int cross_close(struct s_var *vars);
 int    ft_opening();
 struct s_len ft_reading(int fd);
 struct s_len ft_rectangular(int fd);
-int 	ft_nb_of_c(const char *s, int c);
+size_t	ft_nb_of_c(const char *s, int c);
 void  ft_same_len(int fd, struct s_len length);
-void ft_wall_up(int fd, struct s_len lines);
+void ft_wall_up(int fd);
 void ft_wall_down(int fd, struct s_len lines);
 void ft_closed_wall(int fd, struct s_len length);
-void ft_ex_col_pos(int fd ,struct s_len length);
-struct s_len ft_double_array(int fd, struct s_len lines);
-void ft_move_throuth_cllomns(int dir_coolomns[4]);
-void ft_move_throuth_lines(int dir_lines[4]);
-int ft_searching_col_and_exit(struct s_move move, struct s_len lines, int nouv_colonne, int nouv_lines, int nouveau_table[lines.line_nb][lines.line_len]);
-int ft_can_play(struct s_move moving, struct s_len lines, int colonne, int lignes, int nouveau_table[lines.line_nb][lines.line_len]);
-void ft_error_handle(struct s_len lines, struct s_move move, int colonne, int lignes, int nouveau_table[lines.line_nb][lines.line_len]);
-void ft_find_le_p(struct s_len lines, struct s_move move);
-int ft_can_or_not(struct s_move move, struct s_len lines, int nouv_colonne, int nouv_lines,int nouveau_table[lines.line_nb][lines.line_len]);
-void ft_verify_playability(struct s_len lines, struct s_move move);
+struct s_excolpos ft_ex_col_pos(int fd ,struct s_len length, struct s_excolpos vars);
 void ft_verify_map();
+
 
 
 

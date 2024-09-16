@@ -17,7 +17,7 @@ OBJS			= $(SRCS:.c=.o)
 CC				= gcc
 CFLAGS			= -Wall -Wextra -Werror
 
-NAME			= so_long.a
+NAME			= so_long
 
 all:			$(NAME)
 

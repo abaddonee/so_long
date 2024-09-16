@@ -77,7 +77,7 @@ char	*set(char *line_buf)
 	i = 0;
 	while (line_buf[i] != '\n' && line_buf[i] != '\0')
 		i++;
-	if (line_buf[i] == 0 || line_buf[1] == 0)
+	if (line_buf[i + 1] == 0 || line_buf[1] == 0)
 		return (NULL);
 	left = ft_substr(line_buf, i + 1, ft_strlen(line_buf) - i);
 	if (*left == 0)
