@@ -507,12 +507,15 @@ void ft_data_map(struct s_point *player_position, struct s_len *lines, struct s_
     //printf("Taille de la carte : %d x %d\n", vars->points->size->x, vars->points->size->y);
     //printf("Position du joueur fin data map  : x = %d, y = %d\n", player_position->x, player_position->y);
 }
-void ft_windowss(struct s_var *vars)
+void ft_windowss(struct s_var *vars, struct s_point *player_position)
 {   
-    
+    int x;
+    int y;
+    x = player_position->size->x * 40;
+    y = player_position->size->y * 40;
     vars->mlx = mlx_init();
      
-    vars->mlx_win = mlx_new_window(vars->mlx, 1280, 720, "so_long");
+    vars->mlx_win = mlx_new_window(vars->mlx, x, y, "so_long");
 }
 
 void free_tab_bis_bis(char **tab_bis_bis, int line_nb) { // a changer correctement
@@ -573,32 +576,43 @@ int cross_close(struct s_var *vars)
 //gestion des touche et compteure de deplacement
 
 
-
-
+int ft_C(int x, int y, struct s_point *player_position)
+{ 
+        player_position->tab_bis_bis[y][x] = '0';
+        player_position->nbr_collect_ramaser++;
+        printf("Nombre de collectibles ramassés : %d\n", player_position->nbr_collect_ramaser);
+        return 0;
+}
+int ft_E(int x, int y, struct s_point *player_position)
+{
+    if(player_position->nbr_collect_ramaser == player_position->nbr_collect_fill)
+    {
+       //fin du jeu (loop end)
+    }
+    return -1;
+}
 
 int ft_verify_move(int x, int y, struct s_point *player_position)
 {
 
     /// mettre size ////
 
-    printf("Avant déplacement: Position du joueur : x = %d, y = %d, size x = %d, size y = %d\n", player_position->x, player_position->y, player_position-> size->x, player_position->size->y);
+    //printf("Avant déplacement: Position du joueur : x = %d, y = %d, size x = %d, size y = %d\n", player_position->x, player_position->y, player_position-> size->x, player_position->size->y);
     //printf("Position (%d, %d) contient : %c\n", y, x, player_position->tab_bis_bis[y][x]); // Debugging
 
     if (x < 0 || y < 0 || x >= player_position->size->x  || y >= player_position->size->y -1)
     {
-        printf("hors de la map\n");
         return -1;
     }
 
     if (player_position->tab_bis_bis[y][x] == '1')
     {
-        printf("mur\n");
         return -1;
     }
-   // else if (player_position->tab_bis_bis[y][x] == 'E')
-    //    return 2; seulent si tout les collectible sont ramasser
-    //else if (player_position->tab_bis_bis[y][x] == 'C')
-      //  return 3; conter les collectible et les rempqcer par 0
+    else if (player_position->tab_bis_bis[y][x] == 'C')
+        return(ft_C(x, y, player_position));
+    else if (player_position->tab_bis_bis[y][x] == 'E')
+        return(ft_E(x, y, player_position));
     player_position->moves++;
     return 0;
 }
@@ -663,12 +677,114 @@ int key_handler(int keycode, struct s_point *player_position) // prblm je ne don
     return 0;
 }
 
+
+void ft_put_sol(struct s_var *vars, int x, int y)
+{
+    int img_haut;
+    int img_larg;
+    void *img;
+    char *sol;
+
+    img_haut = 40;
+    img_larg = 40;
+    sol = "./sol.xpm";
+
+    img = mlx_xpm_file_to_image(vars->mlx, sol, &img_haut, &img_larg);
+    if(img == NULL)
+    {
+        perror("image non trouver");
+        exit(EXIT_FAILURE);
+    }
+    mlx_put_image_to_window(vars->mlx, vars->mlx_win, img, x, y);
+    
+}
+
+void ft_sol_to_windows(struct s_var *vars, struct s_point *player_position)
+{
+    int x;
+    int y;
+    int i;
+    int j;
+
+    i = 0;
+    x = 0;
+    y = 0;
+    printf("size x = %d, size y = %d\n", player_position->size->x, player_position->size->y);
+    while (i < player_position->size->y)
+    {
+        x = 0;
+        j = 0;
+        while (j < player_position->size->x)
+        {
+            ft_put_sol(vars, x, y);
+            x += 40;
+            j++;
+        }
+        y += 40;
+        i++;
+       
+    }
+}
+
+void ft_put_wall(struct s_var *vars, int x, int y)
+{
+    int img_haut;
+    int img_larg;
+    void *img;
+    char *wall;
+
+    img_haut = 40;
+    img_larg = 40;
+    wall = "./wall.xpm";
+
+    img = mlx_xpm_file_to_image(vars->mlx, wall, &img_haut, &img_larg);
+    if(img == NULL)
+    {
+        perror("image non trouver");
+        exit(EXIT_FAILURE);
+    }
+    mlx_put_image_to_window(vars->mlx, vars->mlx_win, img, x, y);
+    
+}
+
+void ft_put_wall_to_windows(struct s_var *vars, struct s_point *player_position)
+{
+    int x;
+    int y;
+    int i;
+    int j;
+
+    i = 0;
+    x = 0;
+    y = 0;
+    printf("size x = %d, size y = %d\n", player_position->size->x, player_position->size->y);
+    while (i < player_position->size->y)
+    {
+        x = 0;
+        j = 0;
+        while (j < player_position->size->x)
+        {
+            printf("tab_bis_bis[%d][%d] = %c\n", i, j, player_position->tab_bis_bis[i][j]);
+            if(player_position->tab_bis_bis[i][j] == '1')
+                ft_put_wall(vars, x, y);
+            x += 40;
+            j++;
+        }
+        y += 40;
+        i++;
+    }
+}
+
+
 void ft_touche(struct s_point *player_position, struct s_var *vars)
 {
     
    
     //player_position->vars = &vars;
-    ft_windowss(vars);
+    ft_windowss(vars, player_position);
+    ft_sol_to_windows(vars, player_position);
+    ft_put_wall_to_windows(vars, player_position);
+
     //mlx_hook(vars->mlx_win, 2, 0, ft_close, vars);
     mlx_hook(vars->mlx_win, 17, 0, cross_close, vars);
     mlx_key_hook(vars->mlx_win,ft_close, vars);
@@ -692,11 +808,14 @@ int main()
     struct s_len lines;
     struct s_var vars;
     struct s_size_bis size;
+
+    
     ft_verify_map(&points, &lines, &tabs);
     //printf("posdep %d %d\n", points.x, points.y);
 
     ft_data_map(&points, &lines, &size);
    // printf("taille de la carte main: %d x %d \n", vars.points->size->x, vars.points->size->y);
+
     ft_touche(&points, &vars);
    
     return 0;
@@ -712,10 +831,12 @@ if (player_position->tab_bis_bis)
 
 if (player_position->tabs->tab_bis)
 free(player_position->tabs->tab_bis);
+
+
+ tab bis bis corrupt
 */
 
   
-
 
 
 

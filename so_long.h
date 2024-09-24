@@ -38,7 +38,8 @@ struct	s_var
 {
 	void	*mlx;
 	void	*mlx_win;
-  struct s_point *points;
+  //struct s_point *points;
+  
 };
 
 struct s_tab 
@@ -73,6 +74,7 @@ struct s_excolpos
     int           x;
     int           y;
     int nbr_collect_fill;
+    int nbr_collect_ramaser;
     int nbr_exit_fill;
     int i;
     char *gnl;
