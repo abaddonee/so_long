@@ -30,23 +30,7 @@ void	*ft_memset(void *b, int c, size_t len)
 //-----------------------verifictation de la map----------------------------------------
 
 // ferme la fenetre quand esc est apuiyyer
-int	ft_close(int keycode, struct s_var *vars)
-{
-    if (keycode == 53)
-    {
-        mlx_destroy_window(vars->mlx, vars->mlx_win);
-        exit(0);
-    }
-    
-    return (0);
-}
-//ferme la fenetre quand la croix rouge est apuyyer
-int cross_close(struct s_var *vars)
-{
-    mlx_destroy_window(vars->mlx, vars->mlx_win);
-    exit(0);
-    return(0);
-}
+
 
 
 
@@ -366,7 +350,8 @@ struct s_tab ft_double_array(int fd, struct s_tab tabs, struct s_len lines)
     tabs.tab_bis = malloc(1024 * sizeof (char *));
     if(tabs.tab_bis == NULL)
     {
-        exit(EXIT_FAILURE);
+        //exit(EXIT_FAILURE);
+        return tabs;
     }
     while (gnl != NULL && i < lines.line_nb)
     {
@@ -382,32 +367,28 @@ struct s_tab ft_double_array(int fd, struct s_tab tabs, struct s_len lines)
 
 
 //flood fill
-
- void fill(struct s_tab tabs, struct s_size_bis size, struct s_point *point, int row, int col)
+//maximun 4 prametre 
+ void fill(struct s_tab tabs, struct s_size_bis size, struct s_point *point)
 {
-    if (row < 0 || col < 0 || row >= size.y || col >= size.x)
-        return ;
-    if (tabs.tab_bis[row][col] == 'F')
-        return ;
-    if (tabs.tab_bis[row][col] == '1')
+    int row  = point->ybis;
+    int col = point->xbis;
+    if (row < 0 || col < 0 || row >= size.y || col >= size.x || tabs.tab_bis[row][col] == 'F' || tabs.tab_bis[row][col] == '1')
         return ;
     if (tabs.tab_bis[row][col] == 'C') 
-    {
         point -> nbr_collect_fill++;
-        tabs.tab_bis[row][col] = 'F';
-    }
     if (tabs.tab_bis[row][col] == 'E')
-    {
         point -> nbr_exit_fill++;
+    if (tabs.tab_bis[row][col] == 'C' || tabs.tab_bis[row][col] == 'E' || tabs.tab_bis[row][col] == '0')
         tabs.tab_bis[row][col] = 'F';
-    }
-    if (tabs.tab_bis[row][col] == '0') {
-        tabs.tab_bis[row][col] = 'F';
-    }
-    fill(tabs, size, point, row - 1, col);  
-    fill(tabs, size, point, row + 1, col); 
-    fill(tabs, size, point, row, col - 1);  
-    fill(tabs, size, point, row, col + 1);  
+    point->ybis = row - 1; 
+    fill(tabs, size, point);  
+    point->ybis = row + 1; 
+    fill(tabs, size, point); 
+    point->ybis = row; 
+    point->xbis = col - 1; 
+    fill(tabs, size, point);  
+    point->xbis = col + 1; 
+    fill(tabs, size, point);  
 }
 
 struct s_point flood_fill(struct s_tab tabs, struct s_size_bis size, struct s_point starter)
@@ -416,7 +397,7 @@ struct s_point flood_fill(struct s_tab tabs, struct s_size_bis size, struct s_po
     starter.nbr_exit_fill = 0;
     starter.xbis = starter.x;
     starter.ybis = starter.y;
-    fill(tabs, size, &starter, starter.y, starter.x); 
+    fill(tabs, size, &starter); 
     return starter;
 }
 
@@ -436,32 +417,32 @@ void verify_fill(struct s_point point, struct s_excolpos vars)
 
 // fonction principale qui execute toute les autre fonction
 
-void ft_verify_map()
+void ft_verify_map(struct s_point *points, struct s_len *lines, struct s_tab *tabs)
 {
-    struct s_len lines;
     struct s_excolpos vars;
-    struct s_tab tabs;
-    struct s_point points;
+   
     struct s_size_bis size;
     int fd;
 
     fd = ft_opening();
-    lines = ft_reading(fd);
-    lines = ft_rectangular(fd);
-    ft_same_len(fd, lines);
+    *lines = ft_reading(fd);
+    *lines = ft_rectangular(fd);
+    ft_same_len(fd, *lines);
     ft_wall_up(fd);
-    ft_wall_down(fd, lines);
-    ft_closed_wall(fd, lines);
+    ft_wall_down(fd, *lines);
+    ft_closed_wall(fd, *lines);
     cleenbuffer(fd);
     extra_char(fd);
-    vars = ft_ex_col_pos(fd, lines, vars);
-    points = pos_de_p(fd, lines);
-    size = ft_size_bis(lines, size);
+    vars = ft_ex_col_pos(fd, *lines, vars);
+    *points = pos_de_p(fd, *lines);
+    size = ft_size_bis(*lines, size);
     cleenbuffer(fd);
-    tabs = ft_double_array(fd, tabs, lines);
-    points = flood_fill(tabs, size, points);
+    *tabs = ft_double_array(fd, *tabs, *lines);
+    printf("posdep %d %d\n", points->x, points->y);
+    *points = flood_fill(*tabs, size, *points);
     //printf("size x = %d, size y = %d\n", size.x, size.y);
-    verify_fill(points, vars);  
+    verify_fill(*points, vars); 
+    printf("posdep %d %d\n", points->x, points->y);
     close(fd);
 }
 
@@ -487,124 +468,251 @@ struct s_point ft_doubless_array(int fd, struct s_point tabs, struct s_len lines
         tabs.tab_bis_bis[i] = gnl;
         i++;
     }
+    free(gnl);
     close(fd);
     return tabs;
 }
+
 // Fonction de gestion des événements clavier
-int key_handler(int keycode, struct s_point player_position, struct s_size_bis size, char **map)
+
+
+void ft_data_map(struct s_point *player_position, struct s_len *lines, struct s_size_bis *size) //, struct s_var *vars
 {
-    int new_x = player_position.xbis;
-    int new_y = player_position.ybis;
-
-    if (keycode == 126)        // Touche 'haut'
-        new_y--;
-    else if (keycode == 125)   // Touche 'bas'
-        new_y++;
-    else if (keycode == 123)   // Touche 'gauche'
-        new_x--;
-    else if (keycode == 124)   // Touche 'droite'
-        new_x++; 
-
-    // Vérifier les limites et les obstacles ('1')
-    if (new_x < 0 || new_y < 0 || new_x >= size.x || new_y >= size.y || map[new_y][new_x] == '1')
-        return -1;
-
-    // Mettre à jour la position du joueur
-    player_position.xbis = new_x;
-    player_position.ybis = new_y;
-
-    printf("x = %d, y = %d\n", player_position.xbis, player_position.ybis);
-    return 0;
-}
-
-// Fonction de déplacement du joueur
-int ft_move(void *param) {
-    struct s_move_data *data = (struct s_move_data *)param;
-
-    // Access the members of data
-    mlx_hook(data->vars->mlx_win, 2, 0, key_handler, data->player_position);
-
-    return 0;  // Since mlx_loop_hook expects an int return value
-}
-
-void ft_game()
-{
-    struct s_var vars;
-    struct s_point player_position;
-    struct s_data img;
-    struct s_len lines;
-    struct s_size_bis size;
+    
+    //struct s_point player_position;
+    //struct s_len lines;
     int fd;
 
     // Ouvrir le fichier et lire les dimensions de la carte
     fd = ft_opening();
-    lines = ft_reading(fd);
-    lines = ft_rectangular(fd);
+    *lines = ft_reading(fd);
+    *lines = ft_rectangular(fd);
       // Lire la carte et obtenir les dimensions
       // Définir le nombre de lignes (à partir de `ft_reading`)
 
     // Charger la carte dans un tableau 2D
     cleenbuffer(fd);
-    player_position = ft_doubless_array(fd, player_position, lines);
+    *player_position = ft_doubless_array(fd, *player_position, *lines);
 
-    // Définir la taille de la carte
-    size.x = lines.line_len;
-    size.y = lines.line_nb;
-    printf("Taille de la carte : %d x %d\n", size.x, size.y);
+   /* Définir la taille de la carte
+    size->x = lines->line_len;
+    size->y = lines->line_nb;
+    */
 
-    // Créer la fenêtre et initialiser la bibliothèque graphique
-    
+    // avant changement
+    size->x = lines->line_len;
+    size->y = lines->line_nb;
+    player_position->size = size;
+    //vars->points->size = size;
+    //printf("Taille de la carte : %d x %d\n", vars->points->size->x, vars->points->size->y);
+    //printf("Position du joueur fin data map  : x = %d, y = %d\n", player_position->x, player_position->y);
 }
-
-void ft_windowss(struct s_var vars, struct s_data img)
+void ft_windowss(struct s_var *vars)
 {   
-    vars.mlx = mlx_init();
-    vars.mlx_win = mlx_new_window(vars.mlx, 1280, 720, "so_long");
-   // img.img = mlx_new_image(vars.mlx, 1280, 720);
-    //img.addresse = mlx_get_data_addr(img.img, &img.bit_par_pixel, &img.line_length, &img.endian);
     
-    mlx_loop(vars.mlx);
+    vars->mlx = mlx_init();
+     
+    vars->mlx_win = mlx_new_window(vars->mlx, 1280, 720, "so_long");
 }
 
-void ft_gameloop() {
-    struct s_var vars;
-    struct s_data img;
-    struct s_point player_position;
-    struct s_size_bis size;
-    char **map;
-    map = player_position.tab_bis_bis;
+void free_tab_bis_bis(char **tab_bis_bis, int line_nb) { // a changer correctement
+    if (tab_bis_bis) {
+        for (int i = 0; i < line_nb; i++) {
+            free(tab_bis_bis[i]);
+        }
+        free(tab_bis_bis);
+    }
+}
 
-    // Create and initialize the move data structure
-    struct s_move_data move_data = {&vars, &player_position, size, map};
+int ft_close(int keycode, struct s_var *vars)
+{
+    if(keycode == 53)
+    {
+    /// segmentation fault a la fermeture de la fenetre a verifier
+       if (vars->mlx_win)
+        {
+            printf("fermeture de la fenetre\n");
+            mlx_destroy_window(vars->mlx, vars->mlx_win);
+            printf("fermeture de la fenetre111\n");
+        }
+        if (vars->mlx)
+            free(vars->mlx);
 
-    ft_windowss(vars, img);
+        exit(0);
+        return 0;
+    }
+    
+    return 0;
+    
+}
+//ferme la fenetre quand la croix rouge est apuyyer
+int cross_close(struct s_var *vars)
+{
+    if (vars->mlx_win)
+        mlx_destroy_window(vars->mlx, vars->mlx_win);
+    if (vars->mlx)
+        free(vars->mlx);
+    /////// segmentation fault sur les deux tableau a verifier
+    //if (player_position->tab_bis_bis)
+       // free_tab_bis_bis(player_position->tab_bis_bis, player_position->size->y);
+
+    /*if (player_position->tabs->tab_bis)
+    {
+        int i = 0;
+        //free(player_position->tabs->tab_bis);
+        while(player_position->tabs->tab_bis[i])
+        {
+            printf("tableua%s",player_position->tabs->tab_bis[i]);
+            i++;
+        }
+    }*/
+
+    exit(0);
+    return 0;
+}
+//gestion des touche et compteure de deplacement
+
+
+
+
+
+int ft_verify_move(int x, int y, struct s_point *player_position)
+{
+
+    /// mettre size ////
+
+    printf("Avant déplacement: Position du joueur : x = %d, y = %d, size x = %d, size y = %d\n", player_position->x, player_position->y, player_position-> size->x, player_position->size->y);
+    //printf("Position (%d, %d) contient : %c\n", y, x, player_position->tab_bis_bis[y][x]); // Debugging
+
+    if (x < 0 || y < 0 || x >= player_position->size->x  || y >= player_position->size->y -1)
+    {
+        printf("hors de la map\n");
+        return -1;
+    }
+
+    if (player_position->tab_bis_bis[y][x] == '1')
+    {
+        printf("mur\n");
+        return -1;
+    }
+   // else if (player_position->tab_bis_bis[y][x] == 'E')
+    //    return 2; seulent si tout les collectible sont ramasser
+    //else if (player_position->tab_bis_bis[y][x] == 'C')
+      //  return 3; conter les collectible et les rempqcer par 0
+    player_position->moves++;
+    return 0;
+}
+void ft_up(int keycode, struct s_point *player_position)
+{
+    if (keycode == 126)
+    {
+        int temp_y = player_position->y - 1; 
+        if(ft_verify_move(player_position->x, temp_y, player_position) == 0)
+        {
+            player_position->y = temp_y;
+        }
+    }
+}
+void ft_down(int keycode, struct s_point *player_position)
+{
+    if (keycode == 125)
+    {
+        int temp_y = player_position->y + 1;
+        if(ft_verify_move(player_position->x, temp_y, player_position) == 0)
+        {
+            player_position->y = temp_y;
+        }
+    }
+}
+void ft_left(int keycode, struct s_point *player_position)
+{
+    if (keycode == 123)
+    {
+        int temp_x = player_position->x - 1;
+        if(ft_verify_move(temp_x, player_position->y, player_position) == 0)
+        {
+            player_position->x = temp_x;
+        }
+    }
+}
+void ft_right(int keycode, struct s_point *player_position)
+{
+    if (keycode == 124)
+    {
+        int temp_x = player_position->x + 1;
+        if(ft_verify_move(temp_x, player_position->y, player_position) == 0)
+        {
+            player_position->x = temp_x;
+        }
+    }
+}
+
+int key_handler(int keycode, struct s_point *player_position) // prblm je ne donne pas vars a key handler
+{
+    //variable temporaire pour pas sortir du tableau 
+    //sprintf("size xkeyh = %d, size ykeyh = %d\n", player_position->size->x, player_position->size->y);
+    ft_down(keycode, player_position);
+    ft_up(keycode, player_position);
+    ft_left(keycode, player_position);
+    ft_right(keycode, player_position);  
+    if(keycode == 126 || keycode == 125 || keycode == 123 || keycode == 124)
+    {
+        printf("Nombre de déplacements : %d\n", player_position->moves);
+        printf("Position du joueur : x = %d, y = %d\n", player_position->x, player_position->y);
+    }
+    return 0;
+}
+
+void ft_touche(struct s_point *player_position, struct s_var *vars)
+{
+    
    
-    // Hook the move function to the loop
-    mlx_loop_hook(vars.mlx_win, ft_move, &move_data);
-    
-    // Other hooks
-    mlx_loop_hook(vars.mlx_win, ft_close, &vars);
-    mlx_loop_hook(vars.mlx_win, cross_close, &vars);
-    
-    // Start the graphics loop
-    
-    mlx_loop(vars.mlx);
+    //player_position->vars = &vars;
+    ft_windowss(vars);
+    //mlx_hook(vars->mlx_win, 2, 0, ft_close, vars);
+    mlx_hook(vars->mlx_win, 17, 0, cross_close, vars);
+    mlx_key_hook(vars->mlx_win,ft_close, vars);
+
+    player_position->moves = 0;
+    //printf("size x = %d, size y = %d\n", size->x, size->y);
+   // printf("Position du joueur : x = %d, y = %d\n", player_position->x, player_position->y);
+    mlx_hook(vars->mlx_win, 2, 1L << 0, key_handler, player_position); 
+    mlx_loop(vars->mlx);
+    mlx_destroy_window(vars->mlx, vars->mlx_win);
+    free(vars->mlx);
 }
+
 
 
 
 int main()
 {
-    ft_verify_map();
-   
-    ft_game();
-    ft_gameloop();
+    struct s_tab tabs;
+    struct s_point points;
+    struct s_len lines;
+    struct s_var vars;
+    struct s_size_bis size;
+    ft_verify_map(&points, &lines, &tabs);
+    //printf("posdep %d %d\n", points.x, points.y);
+
+    ft_data_map(&points, &lines, &size);
+   // printf("taille de la carte main: %d x %d \n", vars.points->size->x, vars.points->size->y);
+    ft_touche(&points, &vars);
    
     return 0;
 }
 
+/*-----a faire ----
 
+segmentation fault sur les deux tableau a verifier
+car les close ne peuve avoir que 1 seul argument et donc non pas acces a player position
+il faut donc soit mettre ces tableau dans vars ou esayyer avec une structure globale
+if (player_position->tab_bis_bis)
+ free_tab_bis_bis(player_position->tab_bis_bis, player_position->size->y);
 
+if (player_position->tabs->tab_bis)
+free(player_position->tabs->tab_bis);
+*/
 
   
 

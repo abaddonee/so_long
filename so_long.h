@@ -38,6 +38,7 @@ struct	s_var
 {
 	void	*mlx;
 	void	*mlx_win;
+  struct s_point *points;
 };
 
 struct s_tab 
@@ -62,6 +63,11 @@ struct s_excolpos
     int get_collectibles;
 };
 
+ struct  s_size_bis
+  {
+    int           x;
+    int           y;
+  };
   struct  s_point
   {
     int           x;
@@ -73,32 +79,33 @@ struct s_excolpos
     int xbis;
     int ybis;
     char **tab_bis_bis;
+    //struct s_var *vars;
+    struct s_tab *tabs;
+    struct s_size_bis *size;
+    struct s_len *lines;
+    int moves;
   };
 
  
-   struct  s_size_bis
-  {
-    int           x;
-    int           y;
-  };
+  
 struct s_position 
 {
     int x;
     int y;
 };
 
-struct s_move_data {
+struct s_global {
     struct s_var *vars;
-    struct s_point *player_position;
-    struct s_size_bis size;
-    char **map;
+    struct s_point *points;
+    
 };
 
 
 
+
 void	*ft_memset(void *b, int c, size_t len);
-int	ft_close(int keycode, struct s_var *vars);
-int cross_close(struct s_var *vars);
+//int	ft_close(int keycode, struct s_var *vars);
+//int cross_close(struct s_var *vars);
 int    ft_opening();
 struct s_len ft_reading(int fd);
 struct s_len ft_rectangular(int fd);
@@ -108,7 +115,7 @@ void ft_wall_up(int fd);
 void ft_wall_down(int fd, struct s_len lines);
 void ft_closed_wall(int fd, struct s_len length);
 struct s_excolpos ft_ex_col_pos(int fd ,struct s_len length, struct s_excolpos vars);
-void ft_verify_map();
+//void ft_verify_map();
 
 
 
