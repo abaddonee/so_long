@@ -52,6 +52,7 @@ struct s_len
     int line_len;
     int actual_line_len;
     int line_nb;
+    char *name_map;
 };
 
 struct s_excolpos
@@ -81,7 +82,7 @@ struct s_excolpos
     int xbis;
     int ybis;
     char **tab_bis_bis;
-    //struct s_var *vars;
+    struct s_var *vars;
     struct s_tab *tabs;
     struct s_size_bis *size;
     struct s_len *lines;
@@ -105,19 +106,7 @@ struct s_global {
 
 
 
-void	*ft_memset(void *b, int c, size_t len);
-//int	ft_close(int keycode, struct s_var *vars);
-//int cross_close(struct s_var *vars);
-int    ft_opening();
-struct s_len ft_reading(int fd);
-struct s_len ft_rectangular(int fd);
-size_t	ft_nb_of_c(const char *s, int c);
-void  ft_same_len(int fd, struct s_len length);
-void ft_wall_up(int fd);
-void ft_wall_down(int fd, struct s_len lines);
-void ft_closed_wall(int fd, struct s_len length);
-struct s_excolpos ft_ex_col_pos(int fd ,struct s_len length, struct s_excolpos vars);
-//void ft_verify_map();
+
 
 
 
