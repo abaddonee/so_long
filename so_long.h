@@ -38,7 +38,8 @@ struct	s_var
 {
 	void	*mlx;
 	void	*mlx_win;
-  //struct s_point *points;
+  void *img;
+  struct s_point *points;
   
 };
 
