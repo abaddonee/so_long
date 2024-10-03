@@ -568,12 +568,8 @@ int ft_close(int keycode, struct s_point *player_position)
     if(keycode == 53)
     {
         ft_free_tab(player_position->tab_bis_bis, 1024);
-        if (player_position->vars->mlx_win)
-            mlx_destroy_window(player_position->vars->mlx, player_position->vars->mlx_win);
-        if (player_position->vars->mlx)
-            free(player_position->vars->mlx);
-        if (player_position->vars->img)
-            free(player_position->vars->img);
+        mlx_destroy_window(player_position->vars->mlx, player_position->vars->mlx_win);
+        free(player_position->vars->mlx);
         exit(0);
         return 0;
     }
@@ -603,15 +599,15 @@ void ft_put_sol(struct s_var *vars, int x, int y, struct s_point *player_positio
     img_larg = 40;
     sol = "./sol.xpm";
 
-    vars->img = mlx_xpm_file_to_image(vars->mlx, sol, &img_haut, &img_larg);
-    if(vars->img == NULL)
+    vars->img_sol = mlx_xpm_file_to_image(vars->mlx, sol, &img_haut, &img_larg);
+    if(vars->img_sol == NULL)
     {
         perror("Error\n image non trouver");
         ft_free_tab(player_position->tab_bis_bis, 1024);
+        free(vars->img_sol);
         exit(EXIT_FAILURE);
     }
-    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img, x, y);
-    mlx_destroy_image(vars->mlx, vars->img);
+    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img_sol, x, y);
     
 }
 
@@ -651,16 +647,15 @@ void ft_put_wall(struct s_var *vars, int x, int y, struct s_point *player_positi
     img_larg = 40;
     wall = "./wall.xpm";
 
-    vars->img = mlx_xpm_file_to_image(vars->mlx, wall, &img_haut, &img_larg);
-    if(vars->img == NULL)
+    vars->img_wall = mlx_xpm_file_to_image(vars->mlx, wall, &img_haut, &img_larg);
+    if(vars->img_wall == NULL)
     {
         perror("Error\n image non trouver");
         ft_free_tab(player_position->tab_bis_bis, 1024);
-        free(vars->img);
+        free(vars->img_wall);
         exit(EXIT_FAILURE);
     }
-    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img, x, y);
-    mlx_destroy_image(vars->mlx, vars->img);
+    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img_wall, x, y);
     
 }
 
@@ -700,16 +695,15 @@ void ft_put_collectible(struct s_var *vars, int x, int y, struct s_point *player
     img_larg = 40;
     collectible = "./colect.xpm";
 
-    vars->img = mlx_xpm_file_to_image(vars->mlx, collectible, &img_haut, &img_larg);
-    if(vars->img == NULL)
+    vars->img_collect = mlx_xpm_file_to_image(vars->mlx, collectible, &img_haut, &img_larg);
+    if(vars->img_collect == NULL)
     {
         perror("Error\n image non trouver");
         ft_free_tab(player_position->tab_bis_bis, 1024);
-        free(vars->img);
+        free(vars->img_collect);
         exit(EXIT_FAILURE);
     }
-    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img, x, y);
-    mlx_destroy_image(vars->mlx, vars->img);
+    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img_collect, x, y);
     
 }
 
@@ -749,16 +743,15 @@ void ft_put_exit(struct s_var *vars, int x, int y, struct s_point *player_positi
     img_larg = 40;
     exite = "./exit.xpm";
 
-    vars->img= mlx_xpm_file_to_image(vars->mlx, exite, &img_haut, &img_larg);
-    if(vars->img == NULL)
+    vars->img_exit= mlx_xpm_file_to_image(vars->mlx, exite, &img_haut, &img_larg);
+    if(vars->img_exit == NULL)
     {
         perror("Error\n image non trouver");
         ft_free_tab(player_position->tab_bis_bis, 1024);
-        free(vars->img);
+        free(vars->img_exit);
         exit(EXIT_FAILURE);
     }
-    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img, x, y);
-    mlx_destroy_image(vars->mlx, vars->img);
+    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img_exit, x, y);
     
 }
 
@@ -798,16 +791,15 @@ void ft_put_player(struct s_var *vars, int x, int y, struct s_point *player_posi
     img_larg = 40;
     player = "./player.xpm";
 
-    vars->img = mlx_xpm_file_to_image(vars->mlx, player, &img_haut, &img_larg);
-    if(vars->img == NULL)
+    vars->img_player = mlx_xpm_file_to_image(vars->mlx, player, &img_haut, &img_larg);
+    if(vars->img_player == NULL)
     {
         perror("Error\n image non trouver");
         ft_free_tab(player_position->tab_bis_bis, 1024);
-        free(vars->img);
+        free(vars->img_player);
         exit(EXIT_FAILURE);
     }
-    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img, x, y);
-    mlx_destroy_image(vars->mlx, vars->img);
+    mlx_put_image_to_window(vars->mlx, vars->mlx_win, vars->img_player, x, y);
     
 }
 
@@ -939,7 +931,7 @@ void ft_right(int keycode, struct s_point *player_position)
     }
 }
 
-int key_handler(int keycode, struct s_point *player_position) // prblm je ne donne pas vars a key handler
+int key_handler(int keycode, struct s_point *player_position) 
 {
     ft_down(keycode, player_position);
     ft_up(keycode, player_position);
@@ -959,12 +951,7 @@ int key_handler(int keycode, struct s_point *player_position) // prblm je ne don
 int cross_close(struct s_point *player_position)
 {
     ft_free_tab(player_position->tab_bis_bis, 1024);
-    if (player_position->vars->mlx_win)
-        mlx_destroy_window(player_position->vars->mlx, player_position->vars->mlx_win);
-    if (player_position->vars->mlx)
-        free(player_position->vars->mlx);
-    if(player_position->vars->img)
-        free(player_position->vars->img);
+    free(player_position->vars->mlx);
     exit(0);
     return 0;
 }

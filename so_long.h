@@ -38,7 +38,11 @@ struct	s_var
 {
 	void	*mlx;
 	void	*mlx_win;
-  void *img;
+  void *img_sol;
+  void *img_wall;
+  void *img_collect;
+  void *img_exit;
+  void *img_player;
   struct s_point *points;
   
 };
