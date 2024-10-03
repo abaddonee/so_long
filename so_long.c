@@ -6,7 +6,7 @@
 /*   By: likiffel <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/25 03:14:58 by likiffel          #+#    #+#             */
-/*   Updated: 2024/04/25 03:15:45 by likiffel         ###   ########.fr       */
+/*   Updated: 2024/10/03 16:34:12 by likiffel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -560,32 +560,62 @@ void ft_windowss(struct s_var *vars, struct s_point *player_position)
 }
 
 
+void ft_put_nbr(int number)
+{
+	char str[10] ="0123456789";
+	if(number > 9)
+	{
+		ft_put_nbr(number / 10);
+	}
+	write(1, &str[number % 10], 1);		
+}
 
+
+
+int ft_end_close(struct s_point *player_position)
+{
+    
+        ft_free_tab(player_position->tab_bis_bis, 1024);
+        mlx_destroy_window(player_position->vars->mlx, player_position->vars->mlx_win);
+		mlx_destroy_display(player_position->vars->mlx);
+        free(player_position->vars->mlx);
+        exit(0);
+        return 0;
+}
 
 
 int ft_close(int keycode, struct s_point *player_position)
 {
-    if(keycode == 53)
+    if(keycode == XK_Escape)
     {
         ft_free_tab(player_position->tab_bis_bis, 1024);
         mlx_destroy_window(player_position->vars->mlx, player_position->vars->mlx_win);
+		mlx_destroy_display(player_position->vars->mlx);
         free(player_position->vars->mlx);
         exit(0);
         return 0;
     }
     return 0;
 }
+
+
+
+
 int ft_C(int x, int y, struct s_point *player_position)
 { 
         player_position->tab_bis_bis[y][x] = '0';
         player_position->nbr_collect_ramaser++;
         return 0;
 }
+
 int ft_E(struct s_point *player_position)
 {
+
+	printf("nbr de basse %d et nbr rammas %d", player_position->nbr_collect_ramaser, player_position->nbr_collect_fill);
     if(player_position->nbr_collect_ramaser == player_position->nbr_collect_fill)
     {
-        ft_close(53, player_position);
+		printf("endddddddddddddddddddddddddddddddddddd");
+        ft_close(XK_Escape, player_position);
     }
     return -1;
 }
@@ -868,15 +898,20 @@ int ft_verify_move(int x, int y, struct s_point *player_position)
         return -1;
     }
     else if (player_position->tab_bis_bis[y][x] == 'C')
+	{
+		player_position->moves++;	
         return(ft_C(x, y, player_position));
+	}
     else if (player_position->tab_bis_bis[y][x] == 'E')
+	{
         return(ft_E(player_position));
+	}
     player_position->moves++;
     return 0;
 }
 void ft_up(int keycode, struct s_point *player_position)
 {
-    if (keycode == 126 || keycode == 13)
+    if (keycode == 65362 || keycode == XK_w)
     {
         int temp_y = player_position->y - 1; 
 
@@ -885,13 +920,14 @@ void ft_up(int keycode, struct s_point *player_position)
             ft_put_sol(player_position->vars, player_position->x * 40, player_position->y * 40, player_position);
             player_position->y = temp_y;
             ft_put_player_to_windows(player_position->vars, player_position);
-
+			ft_put_nbr(player_position->moves);
+			write(1, "\n", 1);
         }
     }
 }
 void ft_down(int keycode, struct s_point *player_position)
 {
-    if (keycode == 125 || keycode == 1)
+    if (keycode == 65364 || keycode == XK_s)
     {
         int temp_y = player_position->y + 1;
         if(ft_verify_move(player_position->x, temp_y, player_position) == 0)
@@ -899,12 +935,14 @@ void ft_down(int keycode, struct s_point *player_position)
             ft_put_sol(player_position->vars, player_position->x * 40, player_position->y * 40, player_position);
             player_position->y = temp_y;
             ft_put_player_to_windows(player_position->vars, player_position);
+			ft_put_nbr(player_position->moves);
+			write(1, "\n", 1);
         }
     }
 }
 void ft_left(int keycode, struct s_point *player_position)
 {
-    if (keycode == 123 || keycode == 0)
+    if (keycode == 65361 || keycode == XK_a)
     {
         int temp_x = player_position->x - 1;
         if(ft_verify_move(temp_x, player_position->y, player_position) == 0)
@@ -912,13 +950,14 @@ void ft_left(int keycode, struct s_point *player_position)
             ft_put_sol(player_position->vars, player_position->x * 40, player_position->y * 40, player_position);
             player_position->x = temp_x;
             ft_put_player_to_windows(player_position->vars, player_position);
-
+			ft_put_nbr(player_position->moves);
+			write(1, "\n", 1);
         }
     }
 }
 void ft_right(int keycode, struct s_point *player_position)
 {
-    if (keycode == 124 || keycode == 2)
+    if (keycode == 65363 || keycode == XK_d)
     {
         int temp_x = player_position->x + 1;
         if(ft_verify_move(temp_x, player_position->y, player_position) == 0)
@@ -926,7 +965,8 @@ void ft_right(int keycode, struct s_point *player_position)
             ft_put_sol(player_position->vars, player_position->x * 40, player_position->y * 40, player_position);
             player_position->x = temp_x;
             ft_put_player_to_windows(player_position->vars, player_position);
-
+			ft_put_nbr(player_position->moves);
+			write(1, "\n", 1);
         }
     }
 }
@@ -950,8 +990,11 @@ int key_handler(int keycode, struct s_point *player_position)
 
 int cross_close(struct s_point *player_position)
 {
-    ft_free_tab(player_position->tab_bis_bis, 1024);
+ 	ft_free_tab(player_position->tab_bis_bis, 1024);
+    mlx_destroy_window(player_position->vars->mlx, player_position->vars->mlx_win);
+	mlx_destroy_display(player_position->vars->mlx);
     free(player_position->vars->mlx);
+	
     exit(0);
     return 0;
 }

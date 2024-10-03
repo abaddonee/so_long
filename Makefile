@@ -6,7 +6,7 @@
 #    By: likiffel <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/04/25 03:09:08 by likiffel          #+#    #+#              #
-#    Updated: 2024/04/25 03:11:57 by likiffel         ###   ########.fr        #
+#    Updated: 2024/10/03 15:25:36 by likiffel         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,12 +21,12 @@ NAME			= so_long
 
 all:			$(NAME)
 
-$(NAME):		$(OBJS)
-			$(CC) $(OBJS) -Lmlx -lmlx -framework OpenGL -framework AppKit -o $(NAME)	
+$(NAME): $(OBJS)
+	$(CC) $(OBJS) -Lmlx -lmlx  -Imlx -lXext -lX11 -lm -lz -o $(NAME)
+
 
 %.o: %.c
-	$(CC) -Wall -Wextra -Werror -Imlx -c $< -o $@
-
+	$(CC) -Wall -Wextra -Werror  -Imlx  -c $< -o $@
 
 clean:
 				rm -f $(OBJS)

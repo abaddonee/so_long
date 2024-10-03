@@ -6,7 +6,7 @@
 /*   By: likiffel <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/25 03:12:06 by likiffel          #+#    #+#             */
-/*   Updated: 2024/04/25 03:14:44 by likiffel         ###   ########.fr       */
+/*   Updated: 2024/10/03 13:04:50 by likiffel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,12 @@
 //renlever avant push
 #include <stdio.h>
 #include "mlx/mlx.h"
-#include "mlx/mlx_opengl.h"
+//#include "mlx/mlx_opengl.h"
 #include "gnl/get_next_line.h"
 #include "gnl/get_next_line.c"
 #include "gnl/get_next_line_utils.c"
+#include <X11/X.h>
+#include <X11/keysym.h> 
 
 struct s_data
 {
